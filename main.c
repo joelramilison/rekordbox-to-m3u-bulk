@@ -23,7 +23,7 @@ struct LocalTrack {
 	char path[MAXIMUM_PATH_LENGTH + 1];
 };
 
-void parseXml(struct CollectionTrack* collectionTracks) {
+int parseXml(struct CollectionTrack* collectionTracks) {
 
 	int tracksSize = 1000;
 	collectionTracks = malloc(tracksSize * sizeof(struct CollectionTrack));
@@ -80,13 +80,15 @@ void parseXml(struct CollectionTrack* collectionTracks) {
 	}
 
 	xmlFreeDoc(doc);
+	return counter;
+
 }
 
 int main(void) {
 
 	// Load in collection tracks
 	struct CollectionTrack* collectionTracks;
-	parseXml(collectionTracks);	
-	
+	int tracksCount = parseXml(collectionTracks);	
+	printf("Found %d tracks.\n", tracksCount);
 	return 0;
 }
