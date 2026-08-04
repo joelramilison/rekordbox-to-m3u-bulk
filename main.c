@@ -55,7 +55,7 @@ int parseXml(struct CollectionTrack* collectionTracks) {
 	int counter = 0;
 	while(cur != NULL) {
 		// Only handle TRACK nodes, not 'text' nodes
-		if (strcmp((char *)cur->name, "text") == 0) {
+		if (strcmp((char *)cur->name, "TRACK") != 0) {
 			cur = cur->next;
 			continue;
 		}
