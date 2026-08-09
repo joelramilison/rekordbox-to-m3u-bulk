@@ -100,12 +100,51 @@ void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
 	}
 }
 
-int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* plNodePtr) {
+int parseCollectionTracks(struct CollectionTrack** collectionTracksPtr, xmlNodePtr cur) {
 
 	int tracksSize = 1000;
 	struct CollectionTrack* collectionTracks = *collectionTracksPtr;
 	collectionTracks = malloc(tracksSize * sizeof(struct CollectionTrack));
 	memset(collectionTracks, 0, tracksSize * sizeof(struct CollectionTrack));
+	
+	int counter = 0;
+	while(cur != NULL) {
+		// Only handle TRACK nodes, not 'text' nodes
+		if (strcmp((char *)cur->name, "TRACK") != 0) {
+			cur = cur->next;
+			continue;
+		}
+		counter += 1;
+		if (counter > tracksSize) {
+			if(!realloc(collectionTracks, tracksSize * 2 * sizeof(struct CollectionTrack))) {
+				printf("Error reallocating memory.\n");
+				exit(1);
+			}
+			memset(collectionTracks + tracksSize, 0, tracksSize * sizeof(struct CollectionTrack));
+			tracksSize = tracksSize * 2;
+		}
+		xmlChar* trackId = xmlGetProp(cur, (const xmlChar*)"TrackID");
+		xmlChar* title = xmlGetProp(cur, (const xmlChar*)"Name");
+		xmlChar* artist = xmlGetProp(cur, (const xmlChar*)"Artist");
+		if (strlen((char* ) trackId) > MAXIMUM_TRACK_ID_LENGTH) {
+			fprintf(stderr, "Error: Track ID longer than maximum allowed length.\nTitle: %s\nArtist:%s\n",
+				title, artist);
+			exit(1);
+		}
+		strlcpy(collectionTracks[counter-1].trackId, (char *)trackId, MAXIMUM_TRACK_ID_LENGTH + 1);
+		strlcpy(collectionTracks[counter-1].title, (char *)title, MAXIMUM_TITLE_LENGTH + 1);
+		strlcpy(collectionTracks[counter-1].artist, (char *)artist, MAXIMUM_ARTIST_LENGTH + 1);
+		xmlFree(trackId);
+		xmlFree(title);
+		xmlFree(artist);
+		cur = cur->next;
+	}
+
+	return counter;
+
+}
+int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* plNodePtr) {
+
 
 	xmlDocPtr doc = xmlParseFile(REKORDBOX_COLLECTION_XML_PATH);
 	if (doc == NULL) {
@@ -146,43 +185,14 @@ int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* 
 	if (cur == NULL) {
 		fprintf(stderr, "XML Parse error: Couldn't find root playlists NODE node.\n");
 	}
+
+	// Parse the playlists and populate the PlaylistNode
 	findPlaylists(cur, plNodePtr);
 	
-	// Cycle through TRACK nodes and get track info
-	cur = collectionNodePtr->xmlChildrenNode;
-	int counter = 0;
-	while(cur != NULL) {
-		// Only handle TRACK nodes, not 'text' nodes
-		if (strcmp((char *)cur->name, "TRACK") != 0) {
-			cur = cur->next;
-			continue;
-		}
-		counter += 1;
-		if (counter > tracksSize) {
-			tracksSize = tracksSize * 2;
-			if(!realloc(collectionTracks, tracksSize * sizeof(struct CollectionTrack))) {
-				printf("Error reallocating memory.\n");
-				exit(1);
-			}
-		}
-		xmlChar* trackId = xmlGetProp(cur, (const xmlChar*)"TrackID");
-		xmlChar* title = xmlGetProp(cur, (const xmlChar*)"Name");
-		xmlChar* artist = xmlGetProp(cur, (const xmlChar*)"Artist");
-		if (strlen((char* ) trackId) > MAXIMUM_TRACK_ID_LENGTH) {
-			fprintf(stderr, "Error: Track ID longer than maximum allowed length.\nTitle: %s\nArtist:%s\n",
-				title, artist);
-			exit(1);
-		}
-		strlcpy(collectionTracks[counter-1].trackId, (char *)trackId, MAXIMUM_TRACK_ID_LENGTH + 1);
-		strlcpy(collectionTracks[counter-1].title, (char *)title, MAXIMUM_TITLE_LENGTH + 1);
-		strlcpy(collectionTracks[counter-1].artist, (char *)artist, MAXIMUM_ARTIST_LENGTH + 1);
-		xmlFree(trackId);
-		xmlFree(title);
-		xmlFree(artist);
-		cur = cur->next;
-	}
-
+	// Parse the collection of tracks themselves
+	int parsedTracks = parseCollectionTracks(collectionTracksPtr, collectionNodePtr->xmlChildrenNode);
+	
 	xmlFreeDoc(doc);
-	return counter;
+	return parsedTracks;
 
 }

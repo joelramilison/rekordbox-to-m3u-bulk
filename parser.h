@@ -10,4 +10,6 @@ void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr);
 
 int parseXml(struct CollectionTrack** collectionTracks, struct PlaylistNode* plNodePtr);
 
+int parseCollectionTracks(struct CollectionTrack** collectionTracksPtr, xmlNodePtr cur);
+
 #endif
