@@ -5,9 +5,10 @@
 #include "structs.h"
 
 // TODO: Parse playlists into an array or maybe a nodes structure (because of subfolders) if it's in xml
-int parseXml(struct CollectionTrack* collectionTracks) {
+int parseXml(struct CollectionTrack** collectionTracksPtr) {
 
 	int tracksSize = 1000;
+	struct CollectionTrack* collectionTracks = *collectionTracksPtr;
 	collectionTracks = malloc(tracksSize * sizeof(struct CollectionTrack));
 	memset(collectionTracks, 0, tracksSize * sizeof(struct CollectionTrack));
 

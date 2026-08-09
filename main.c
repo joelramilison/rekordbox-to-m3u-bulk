@@ -7,7 +7,7 @@ int main(void) {
 
 	// Load in collection tracks
 	struct CollectionTrack* collectionTracks;
-	int collectionTracksCount = parseXml(collectionTracks);	
+	int collectionTracksCount = parseXml(&collectionTracks);	
 
 	struct LocalTracksArray localTracksArray = {0};
 	localTracksArray.allocatedBytes = 1000 * sizeof(struct LocalTrack);

@@ -3,6 +3,6 @@
 
 #include "structs.h"
 
-int parseXml(struct CollectionTrack* collectionTracks);
+int parseXml(struct CollectionTrack** collectionTracks);
 
 #endif
