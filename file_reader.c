@@ -1,3 +1,4 @@
+#include "file_reader.h"
 #include <stdio.h>
 #include "structs.h"
 #include "config.h"
