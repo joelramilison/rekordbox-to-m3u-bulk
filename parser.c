@@ -103,8 +103,8 @@ void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
 void parseCollectionTracks(struct CollectionTracksArray* collectionTracksArrayPtr, xmlNodePtr cur) {
 
 	int tracksSize = 1000;
+	collectionTracksArrayPtr->array = malloc(tracksSize * sizeof(struct CollectionTrack));
 	struct CollectionTrack* collectionTracks = collectionTracksArrayPtr->array;
-	collectionTracks = malloc(tracksSize * sizeof(struct CollectionTrack));
 	memset(collectionTracks, 0, tracksSize * sizeof(struct CollectionTrack));
 	
 	int counter = 0;
