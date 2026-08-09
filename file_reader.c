@@ -83,7 +83,7 @@ void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksAr
 		}
 		// Check if file or directory
 		struct stat statBuf;
-		char* fullPath = malloc((MAXIMUM_PATH_LENGTH + 1) * sizeof(char));
+		char fullPath[MAXIMUM_PATH_LENGTH + 1];
 		concatPath(fullPath, startDir, name, MAXIMUM_PATH_LENGTH);
 		if (stat(fullPath, &statBuf) != 0) {
 			fprintf(stderr, "Error getting status for path: %s\nError message: %s\n", fullPath, strerror(errno));
