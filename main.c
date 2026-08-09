@@ -5,14 +5,14 @@
 
 int main(void) {
 
-	// Load in collection tracks
-	struct CollectionTrack* collectionTracks;
+	// Load in collection tracks from Rekordbox Collection XML
+	struct CollectionTracksArray collectionTracks = {0};
 	struct PlaylistNode plNode = {0};
-	int collectionTracksCount = parseXml(&collectionTracks, &plNode);	
+	parseXml(&collectionTracks, &plNode);
 
+	// Scan MP3 tags from filesystem by recursively searching a directory
 	struct LocalTracksArray localTracksArray = {0};
-	localTracksArray.allocatedBytes = 1000 * sizeof(struct LocalTrack);
-	localTracksArray.array = malloc(localTracksArray.allocatedBytes);
 	recursiveTrackSearch((char* ) LOCAL_FILES_ROOT_DIRECTORY, &localTracksArray);
+	
 	return 0;
 }

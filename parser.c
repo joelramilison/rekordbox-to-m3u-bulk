@@ -100,10 +100,10 @@ void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
 	}
 }
 
-int parseCollectionTracks(struct CollectionTrack** collectionTracksPtr, xmlNodePtr cur) {
+void parseCollectionTracks(struct CollectionTracksArray* collectionTracksArrayPtr, xmlNodePtr cur) {
 
 	int tracksSize = 1000;
-	struct CollectionTrack* collectionTracks = *collectionTracksPtr;
+	struct CollectionTrack* collectionTracks = collectionTracksArrayPtr->array;
 	collectionTracks = malloc(tracksSize * sizeof(struct CollectionTrack));
 	memset(collectionTracks, 0, tracksSize * sizeof(struct CollectionTrack));
 	
@@ -139,12 +139,10 @@ int parseCollectionTracks(struct CollectionTrack** collectionTracksPtr, xmlNodeP
 		xmlFree(artist);
 		cur = cur->next;
 	}
-
-	return counter;
+	collectionTracksArrayPtr->tracksCount = counter;
 
 }
-int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* plNodePtr) {
-
+void parseXml(struct CollectionTracksArray* collectionTracksArrayPtr, struct PlaylistNode* plNodePtr) {
 
 	xmlDocPtr doc = xmlParseFile(REKORDBOX_COLLECTION_XML_PATH);
 	if (doc == NULL) {
@@ -190,9 +188,7 @@ int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* 
 	findPlaylists(cur, plNodePtr);
 	
 	// Parse the collection of tracks themselves
-	int parsedTracks = parseCollectionTracks(collectionTracksPtr, collectionNodePtr->xmlChildrenNode);
+	parseCollectionTracks(collectionTracksArrayPtr, collectionNodePtr->xmlChildrenNode);
 	
 	xmlFreeDoc(doc);
-	return parsedTracks;
-
 }

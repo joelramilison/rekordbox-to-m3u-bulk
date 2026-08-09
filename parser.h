@@ -8,8 +8,8 @@ void findPlaylists(xmlNodePtr cur, struct PlaylistNode* plNodePtr);
 
 void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr);
 
-int parseXml(struct CollectionTrack** collectionTracks, struct PlaylistNode* plNodePtr);
+void parseXml(struct CollectionTracksArray* collectionTracksArrayPtr, struct PlaylistNode* plNodePtr);
 
-int parseCollectionTracks(struct CollectionTrack** collectionTracksPtr, xmlNodePtr cur);
+void parseCollectionTracks(struct CollectionTracksArray* collectionTracksArrayPtr, xmlNodePtr cur);
 
 #endif

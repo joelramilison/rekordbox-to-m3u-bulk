@@ -13,6 +13,12 @@ struct CollectionTrack {
 	char trackId[MAXIMUM_TRACK_ID_LENGTH + 1];
 };
 
+struct CollectionTracksArray {
+
+	struct CollectionTrack* array;
+	size_t tracksCount;
+};
+
 struct LocalTrack {
 
 	char title[MAXIMUM_TITLE_LENGTH + 1];

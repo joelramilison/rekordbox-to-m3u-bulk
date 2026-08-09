@@ -64,6 +64,9 @@ void addLocalTrack(struct LocalTracksArray* localTracksArray, char* path, char* 
 }
 void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksArray) {
 
+	localTracksArray->allocatedBytes = 1000 * sizeof(struct LocalTrack);
+	localTracksArray->array = malloc(localTracksArray->allocatedBytes);
+
 	DIR* dirPtr = opendir(startDir);
 	if (dirPtr == NULL) {
 		// TODO: Implement errno
