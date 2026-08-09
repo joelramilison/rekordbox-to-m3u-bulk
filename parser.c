@@ -1,11 +1,106 @@
+#include "parser.h"
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "config.h"
 #include <string.h>
 #include "structs.h"
 
-// TODO: Parse playlists into an array or maybe a nodes structure (because of subfolders) if it's in xml
-int parseXml(struct CollectionTrack** collectionTracksPtr) {
+// Recursively go through all nodes which are either playlist folders or playlists.
+void findPlaylists(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
+
+	// Parse playlist/folder name
+	xmlChar* name = xmlGetProp(cur, (const xmlChar *)"Name");
+	if (name == NULL) {
+		fprintf(stderr, "XML Parse error: Couldn't parse PlaylistNode name.\n");
+		exit(1);
+	}
+	strlcpy(plNodePtr->name, (char *) name, MAXIMUM_PLAYLIST_NODE_NAME_LENGTH + 1);
+
+	// Parse type value (playlist vs. folder)
+	xmlChar* typeString = xmlGetProp(cur, (const xmlChar*) "Type");
+	char* endPtr = NULL;
+	long int type = strtol((char *)typeString, &endPtr, 0);
+	if (endPtr == (char *) typeString) {
+		fprintf(stderr, "XML Parse error: Couldn't parse PlaylistNode type at node '%s'.\n", (char *) name);
+		exit(1);
+	}
+	if (type == 1) {
+		plNodePtr->isPlaylist = 1;
+	} else if (type != 0) {
+		fprintf(stderr, "XML Parse error: Parsed bad type value for PlaylistNode '%s'.\n", (char *) name);
+		exit(1);
+	}
+	
+	// Parse count value (number of tracks or children folders)
+	xmlChar* countString = xmlGetProp(
+		cur, (const xmlChar*) type ? (const xmlChar * )"Entries" : (const xmlChar * )"Count");
+	endPtr = NULL;
+	long int count = strtol((char *) countString, &endPtr, 0);
+	if (endPtr == (char *) countString) {
+		fprintf(stderr, "XML Parse error: Couldn't parse PlaylistNode count value at node '%s'.\n", (char *) name);
+		exit(1);
+	}
+	// If value is too big for size_t or if value is negative, exit
+	if ((LONG_MAX < SIZE_MAX || count < (long int) SIZE_MAX) && count >= 0) {
+		plNodePtr->count = (size_t) count;
+	} else {
+		fprintf(stderr, "XML Parse error: Parsed bad count value for PlaylistNode '%s'.\n", (char *) name);
+		exit(1);
+	}
+
+	// Handle playlist: Import it
+	if (type == 1) {
+		importPlaylist(cur, plNodePtr);
+		return;
+
+	}
+
+	// Handle folder: Cycle through children
+	plNodePtr->childrenNodes = malloc(plNodePtr->count * sizeof(struct PlaylistNode));
+	cur = cur->xmlChildrenNode;
+	int nodesFound = 0;
+	while (cur != NULL) {
+		if (strcmp((char*) cur->name, "NODE") == 0) {
+			findPlaylists(cur, &(plNodePtr->childrenNodes[nodesFound]));
+			nodesFound += 1;
+		}
+		cur = cur->next;
+	}
+	if (nodesFound != count) {
+		fprintf(stderr, "XML Parse error: Found %d children nodes under PlaylistNode '%s' but expected %d.\n",
+			nodesFound, (char *) name, (int)count);
+		exit(1);
+	}
+}
+
+void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
+
+	plNodePtr->trackIds = malloc(plNodePtr->count * sizeof(char *));
+
+	cur = cur->xmlChildrenNode;
+	int tracksFound = 0;
+	while (cur != NULL) {
+		if (strcmp((char*) cur->name, "TRACK") == 0) {
+			xmlChar* trackId = xmlGetProp(cur, (const xmlChar *)"Key");
+			if(trackId == NULL || strcmp((char *) trackId, "") == 0) {
+				fprintf(stderr, "XML Parse error: Couldn't parse track ID for track in playlist '%s'.\n", plNodePtr->name);
+				exit(1);
+			}
+			plNodePtr->trackIds[tracksFound] = malloc(strlen((char *) trackId));
+			strlcpy((char *) trackId, plNodePtr->trackIds[tracksFound], MAXIMUM_TRACK_ID_LENGTH + 1);
+			tracksFound += 1; 
+		}
+		cur = cur->next;
+	}
+
+	if (tracksFound != plNodePtr->count) {
+		fprintf(stderr, "XML Parse error: Found %d tracks under playlist '%s' but expected %d.\n",
+			tracksFound, plNodePtr->name, (int) (plNodePtr->count));
+		exit(1);
+	}
+}
+
+int parseXml(struct CollectionTrack** collectionTracksPtr, struct PlaylistNode* plNodePtr) {
 
 	int tracksSize = 1000;
 	struct CollectionTrack* collectionTracks = *collectionTracksPtr;
@@ -14,13 +109,13 @@ int parseXml(struct CollectionTrack** collectionTracksPtr) {
 
 	xmlDocPtr doc = xmlParseFile(REKORDBOX_COLLECTION_XML_PATH);
 	if (doc == NULL) {
-		fprintf(stderr, "Error parsing XML file.\n");
+		fprintf(stderr, "XML Parse error: Error parsing XML file.\n");
 		exit(1);
 	}
 
 	xmlNodePtr cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		fprintf(stderr, "Empty document.\n");
+		fprintf(stderr, "XML Parse error: Empty document.\n");
 		exit(1);
 	}
 
@@ -30,11 +125,31 @@ int parseXml(struct CollectionTrack** collectionTracksPtr) {
 		cur = cur->next;
 	}
 	if (cur == NULL) {
-		fprintf(stderr, "Couldn't find COLLECTION node.\n");
+		fprintf(stderr, "XML Parse error: Couldn't find COLLECTION node.\n");
 	}
+	// Saving this pointer for the collection parsing later
+	xmlNodePtr collectionNodePtr = cur;
+	
+	// Go to PLAYLISTS node
+	while(cur != NULL && (xmlStrcmp(cur->name, (const xmlChar*)"PLAYLISTS")) != 0) {
+		cur = cur->next;
+	}
+	if (cur == NULL) {
+		fprintf(stderr, "XML Parse error: Couldn't find PLAYLISTS node.\n");
+	}
+
+	// Go to root playlists NODE
+	cur = cur->xmlChildrenNode;
+	while(cur != NULL && (xmlStrcmp(cur->name, (const xmlChar*)"NODE")) != 0) {
+		cur = cur->next;
+	}
+	if (cur == NULL) {
+		fprintf(stderr, "XML Parse error: Couldn't find root playlists NODE node.\n");
+	}
+	findPlaylists(cur, plNodePtr);
 	
 	// Cycle through TRACK nodes and get track info
-	cur = cur->xmlChildrenNode;
+	cur = collectionNodePtr->xmlChildrenNode;
 	int counter = 0;
 	while(cur != NULL) {
 		// Only handle TRACK nodes, not 'text' nodes

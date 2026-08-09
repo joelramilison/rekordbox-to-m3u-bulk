@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include "config.h"
+#include <stdbool.h>
 
 struct CollectionTrack {
 	
@@ -24,6 +25,15 @@ struct LocalTracksArray {
 	struct LocalTrack* array;
 	size_t tracksCount;
 	size_t allocatedBytes;
+};
+
+// If isPlaylist is 1, can't use 'tracks'. If it's 0, can't use 'childrenNodes'.
+struct PlaylistNode {
+    char name[MAXIMUM_PLAYLIST_NODE_NAME_LENGTH + 1];
+	char** trackIds;
+    struct PlaylistNode* childrenNodes;
+	bool isPlaylist;
+	size_t count;
 };
 
 #endif
