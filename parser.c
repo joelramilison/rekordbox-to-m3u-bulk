@@ -52,6 +52,11 @@ int parseXml(struct CollectionTrack* collectionTracks) {
 		xmlChar* trackId = xmlGetProp(cur, (const xmlChar*)"TrackID");
 		xmlChar* title = xmlGetProp(cur, (const xmlChar*)"Name");
 		xmlChar* artist = xmlGetProp(cur, (const xmlChar*)"Artist");
+		if (strlen((char* ) trackId) > MAXIMUM_TRACK_ID_LENGTH) {
+			fprintf(stderr, "Error: Track ID longer than maximum allowed length.\nTitle: %s\nArtist:%s\n",
+				title, artist);
+			exit(1);
+		}
 		strlcpy(collectionTracks[counter-1].trackId, (char *)trackId, MAXIMUM_TRACK_ID_LENGTH + 1);
 		strlcpy(collectionTracks[counter-1].title, (char *)title, MAXIMUM_TITLE_LENGTH + 1);
 		strlcpy(collectionTracks[counter-1].artist, (char *)artist, MAXIMUM_ARTIST_LENGTH + 1);
