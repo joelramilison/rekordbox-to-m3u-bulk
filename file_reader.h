@@ -8,4 +8,6 @@ char* concatPath(char* fullPath, const char* first, const char* second, size_t m
 
 void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksArray);
 
+void getFileExtension(char* dest, char* fileName);
+
 #endif

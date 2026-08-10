@@ -62,6 +62,41 @@ void addLocalTrack(struct LocalTracksArray* localTracksArray, char* path, char* 
 	localTracksArray->tracksCount += 1;
 	
 }
+
+// dest needs 6 bytes. Returns 1 if found file extension.
+void getFileExtension(char* dest, char* fileName) {
+
+	int len = strlen(fileName);
+	int dotIndex = -1;
+	for (int i = len - 1; i >= 0; i--) {
+		if (fileName[i] == '.') {
+			dotIndex = i;
+			break;
+		}
+	}
+
+	// If no dot found
+	if (dotIndex == -1) {
+		dest[0] = '\0';
+		return;
+	}
+
+	// Ignore if file extension is longer than 5 or fileName ends with '.'
+	int lastExtensionIndex = len - 1;
+	int firstExtensionIndex = dotIndex + 1;
+	int extensionLen = lastExtensionIndex - firstExtensionIndex + 1;
+	if (extensionLen > 5 || lastExtensionIndex == dotIndex) {
+		dest[0] = '\0';
+		return;
+	}
+
+	for (int i = firstExtensionIndex; i <= lastExtensionIndex; i++) {
+		*dest = fileName[i];
+		dest++;
+	}
+	*dest = '\0';
+}
+
 void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksArray) {
 
 	DIR* dirPtr = opendir(startDir);
@@ -97,10 +132,11 @@ void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksAr
 		// If found a file
 		if ((statBuf.st_mode & S_IFMT) == S_IFREG) {
 
-			size_t nameLen = strlen(name);
-			// If MP3 or FLAC
-			if ((nameLen > 4 && (strcmp(name + (nameLen - 4), ".mp3") == 0))
-				|| (nameLen > 5 && (strcmp(name + (nameLen - 5), ".flac")) == 0)) {
+			char fileExtension[6];
+			getFileExtension(fileExtension, name);
+
+			// If supported file extension
+			if ((strcmp(fileExtension, "mp3") == 0) || (strcmp(fileExtension, "flac") == 0)) {
 
 				TagLib_File* tagLibFile = taglib_file_new(fullPath);
 				if (!taglib_file_is_valid(tagLibFile)) {
@@ -112,7 +148,30 @@ void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksAr
 				char* artist = taglib_tag_artist(tagLibTag);
 				addLocalTrack(localTracksArray, fullPath, title, artist);
 				taglib_file_free(tagLibFile);
-			} 
+
+			// Else: Print info for unsupported file types
+			} else {
+				// But skip Rekordbox's own sample files
+				bool rekordboxSampleFound = 0;
+				for (int i = 0; i < REKORDBOX_IGNORE_COUNT; i++) {
+					if (strcmp(name, REKORDBOX_IGNORE[i]) == 0) {
+						rekordboxSampleFound = 1;
+						break;
+					}
+				}
+				if (rekordboxSampleFound) {
+					continue;
+				}
+				if (fileExtension[0] == '\0') {
+					continue;
+				}
+				for (int i = 0; i < FILE_EXTENSIONS_FOR_WARNING_COUNT; i++) {
+					if (strcmp(fileExtension, FILE_EXTENSIONS_FOR_WARNING[i]) == 0) {
+						printf("Info: Ignoring file '%s' due to its file type.\n", fullPath);
+						break;
+					}
+				}
+			}
 		}
 	}
 	closedir(dirPtr);
