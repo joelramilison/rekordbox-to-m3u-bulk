@@ -126,6 +126,11 @@ void parseCollectionTracks(struct CollectionTracksArray* collectionTracksArrayPt
 		xmlChar* trackId = xmlGetProp(cur, (const xmlChar*)"TrackID");
 		xmlChar* title = xmlGetProp(cur, (const xmlChar*)"Name");
 		xmlChar* artist = xmlGetProp(cur, (const xmlChar*)"Artist");
+		if(strcmp((char *) artist, "rekordbox") == 0) {
+			counter -= 1;
+			cur = cur->next;
+			continue;
+		}
 		if (strlen((char* ) trackId) > MAXIMUM_TRACK_ID_LENGTH) {
 			fprintf(stderr, "Error: Track ID longer than maximum allowed length.\nTitle: %s\nArtist:%s\n",
 				title, artist);
