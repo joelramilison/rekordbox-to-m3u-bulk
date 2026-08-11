@@ -4,9 +4,9 @@
 #include "config.h"
 #include <dirent.h>
 #include <taglib/tag_c.h>
-#include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
+#include "file_io_general.h"
 
 // Create full path out of first and second, adding or removing '/' in between them as needed.
 // Pass a string pointer to populate.
@@ -115,22 +115,18 @@ void recursiveTrackSearch(char *startDir, struct LocalTracksArray* localTracksAr
 		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
 			continue;
 		}
-		// Check if file or directory
-		struct stat statBuf;
+
 		char fullPath[MAXIMUM_PATH_LENGTH + 1];
 		concatPath(fullPath, startDir, name, MAXIMUM_PATH_LENGTH);
-		if (stat(fullPath, &statBuf) != 0) {
-			fprintf(stderr, "Error getting status for path: %s\nError message: %s\n", fullPath, strerror(errno));
-			exit(1);
-		}	
+		enum AnalyzedType anType = getFileTypeForPath(fullPath);
 
 		// If found a directory
-		if ((statBuf.st_mode & S_IFMT) == S_IFDIR) {
+		if (anType == ANALYZED_TYPE_DIRECTORY) {
 			recursiveTrackSearch(fullPath, localTracksArray);
 			continue;
 		}
 		// If found a file
-		if ((statBuf.st_mode & S_IFMT) == S_IFREG) {
+		if (anType == ANALYZED_TYPE_FILE) {
 
 			char fileExtension[6];
 			getFileExtension(fileExtension, name);
