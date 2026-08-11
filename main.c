@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "file_reader.h"
 #include "matching.h"
+#include "file_io_general.h"
 
 int main(void) {
 
@@ -17,8 +18,13 @@ int main(void) {
 	localTracks.array = malloc(localTracks.allocatedBytes);
 	recursiveTrackSearch((char* ) LOCAL_FILES_ROOT_DIRECTORY, &localTracks);
 	
-	
 	bool perfectSuccess = addPathsToCollection(&localTracks, &collectionTracks);
+	// Only start writing the .m3u playlists if found exactly 1 filepath for every collection track
+	if (!perfectSuccess) {
+		return 0;
+	}
+
+	clearDirRecursively(GENERATE_PLAYLISTS_DIRECTORY);
 
 	return 0;
 }
