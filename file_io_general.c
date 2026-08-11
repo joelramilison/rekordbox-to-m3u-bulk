@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
+#include "config.h"
 
 enum AnalyzedType getFileTypeForPath(char* path) {
     
@@ -95,4 +97,39 @@ void getFileExtension(char* dest, char* fileName) {
 		dest++;
 	}
 	*dest = '\0';
+}
+
+void clearDirRecursively(char* path) {
+
+    DIR* dir = opendir(path);
+    if (dir == NULL) {
+        fprintf(stderr, "FILE I/O Error: Couldn't open directory at path %s\n", path);
+        exit(1);
+    }
+
+    struct dirent* dirEntry;
+    while ((dirEntry = readdir(dir)) != NULL) {
+
+        if ((strcmp(dirEntry->d_name, ".") == 0) || (strcmp(dirEntry->d_name, "..") == 0)) {
+            continue;
+        }
+
+        char fullPath[MAXIMUM_PATH_LENGTH + 1];
+        concatPath(fullPath, path, dirEntry->d_name, MAXIMUM_PATH_LENGTH);
+        enum AnalyzedType anType = getFileTypeForPath(fullPath);
+
+        if (anType == ANALYZED_TYPE_FILE) {
+            if (remove(fullPath) != 0) {
+                fprintf(stderr, "File I/O error: Couldn't remove file at path %s\n", fullPath);
+                exit(1);
+            }
+            continue;
+        }
+        if (anType == ANALYZED_TYPE_DIRECTORY) {
+            clearDirRecursively(fullPath);
+            remove(fullPath);
+            continue;
+        }
+    }
+    closedir(dir);
 }

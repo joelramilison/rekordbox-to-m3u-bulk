@@ -15,4 +15,7 @@ char* concatPath(char* fullPath, const char* first, const char* second, size_t m
 
 void getFileExtension(char* dest, char* fileName);
 
+// Recursively removes all the directories and files inside the specified directory.
+void clearDirRecursively(char* path);
+
 #endif
