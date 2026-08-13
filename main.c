@@ -4,6 +4,7 @@
 #include "file_reader.h"
 #include "matching.h"
 #include "file_io_general.h"
+#include "playlist_writing.h"
 
 int main(void) {
 
@@ -24,7 +25,9 @@ int main(void) {
 		return 0;
 	}
 
-	clearDirRecursively(GENERATE_PLAYLISTS_DIRECTORY);
+	exportAllPlaylists(GENERATE_PLAYLISTS_DIRECTORY, &plNode, &collectionTracks);
+
+	printf("Successfully exported all playlists.\n");
 
 	return 0;
 }

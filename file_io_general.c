@@ -24,9 +24,7 @@ enum AnalyzedType getFileTypeForPath(char* path) {
     return ANALYZED_TYPE_OTHER;
 }
 
-// Create full path out of first and second, adding or removing '/' in between them as needed.
-// Pass a string pointer to populate.
-char* concatPath(char* fullPath, const char* first, const char* second, size_t maxLen) {
+void concatPath(char* fullPath, const char* first, const char* second, size_t size) {
 
 	if(*first != '/') {
 		fprintf(stderr, "String 1 has to begin with '/' to get a full path.");
@@ -38,7 +36,7 @@ char* concatPath(char* fullPath, const char* first, const char* second, size_t m
 		fullPath[counter] = *first;
 		first += 1;
 		counter += 1;
-		if (counter > maxLen) {
+		if (counter >= size) {
 			fprintf(stderr, "Strings too long for the maximum path length.");
 			exit(1);
 		}
@@ -56,13 +54,13 @@ char* concatPath(char* fullPath, const char* first, const char* second, size_t m
 		fullPath[counter] = *second;
 		second += 1;
 		counter += 1;
-		if (counter > maxLen) {
+		if (counter >= size) {
 			fprintf(stderr, "Strings too long for the maximum path length.");
 			exit(1);
 		}
 	}
 	fullPath[counter] = '\0';
-	return fullPath;
+	return;
 }
 
 // dest needs 6 bytes. Returns 1 if found file extension.
@@ -99,7 +97,7 @@ void getFileExtension(char* dest, char* fileName) {
 	*dest = '\0';
 }
 
-void clearDirRecursively(char* path) {
+void clearDirRecursively(const char* path) {
 
     DIR* dir = opendir(path);
     if (dir == NULL) {

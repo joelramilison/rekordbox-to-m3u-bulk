@@ -3,6 +3,6 @@
 
 #include "structs.h"
 
-void exportAllPlaylists(const struct PlaylistNode* plNode, const struct CollectionTracksArray* collectionTracks);
+void exportAllPlaylists(const char* directory, struct PlaylistNode* rootNode, const struct CollectionTracksArray* collectionTracks);
 
 #endif

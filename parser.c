@@ -26,7 +26,9 @@ void findPlaylists(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
 	}
 	if (type == 1) {
 		plNodePtr->isPlaylist = 1;
-	} else if (type != 0) {
+	} else if (type == 0) {
+		plNodePtr->isPlaylist = 0;
+	} else {
 		fprintf(stderr, "XML Parse error: Parsed bad type value for PlaylistNode '%s'.\n", (char *) name);
 		exit(1);
 	}
@@ -86,8 +88,8 @@ void importPlaylist(xmlNodePtr cur, struct PlaylistNode* plNodePtr) {
 				fprintf(stderr, "XML Parse error: Couldn't parse track ID for track in playlist '%s'.\n", plNodePtr->name);
 				exit(1);
 			}
-			plNodePtr->trackIds[tracksFound] = malloc(strlen((char *) trackId));
-			strlcpy((char *) trackId, plNodePtr->trackIds[tracksFound], MAXIMUM_TRACK_ID_LENGTH + 1);
+			plNodePtr->trackIds[tracksFound] = malloc(strlen((char *) trackId) + 1);
+			strlcpy(plNodePtr->trackIds[tracksFound], (char *) trackId, MAXIMUM_TRACK_ID_LENGTH + 1);
 			tracksFound += 1; 
 		}
 		cur = cur->next;

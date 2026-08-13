@@ -11,11 +11,14 @@ enum AnalyzedType {
 
 enum AnalyzedType getFileTypeForPath(char* path);
 
-char* concatPath(char* fullPath, const char* first, const char* second, size_t maxLen);
+// Create full path out of first and second, adding or removing '/' in between them as needed.
+// Pass a string pointer to pospulate.
+// size is the buffer size of fullPath.
+void concatPath(char* fullPath, const char* first, const char* second, size_t size);
 
 void getFileExtension(char* dest, char* fileName);
 
 // Recursively removes all the directories and files inside the specified directory.
-void clearDirRecursively(char* path);
+void clearDirRecursively(const char* path);
 
 #endif
